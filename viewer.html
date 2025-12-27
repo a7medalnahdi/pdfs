@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>استعراض الملف</title>
+
+<style>
+body {
+  margin: 0;
+  background: #111;
+  color: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+header {
+  padding: 12px 20px;
+  background: #000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header a {
+  color: #fff;
+  text-decoration: none;
+}
+
+#viewer {
+  padding: 20px;
+}
+
+canvas {
+  width: 100%;
+  margin-bottom: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <a href="index.html">← الرجوع</a>
+  <span id="filename"></span>
+</header>
+
+<div id="viewer">جاري تحميل الملف…</div>
+
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<script>
+const owner  = "a7medalnahdi";
+const repo   = "pdfs";
+const branch = "main";
+const folder = "files";
+
+// جلب اسم الملف من الرابط
+const params = new URLSearchParams(window.location.search);
+const file = params.get("file");
+
+if (!file) {
+  document.getElementById("viewer").innerText = "❌ لم يتم تحديد ملف";
+  throw new Error("No file");
+}
+
+document.getElementById("filename").innerText = file;
+
+// رابط PDF
+const pdfURL =
+  `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${folder}/${encodeURIComponent(file)}`;
+
+pdfjsLib.getDocument(pdfURL).promise.then(pdf => {
+  const viewer = document.getElementById("viewer");
+  viewer.innerHTML = "";
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    pdf.getPage(i).then(page => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const viewport = page.getViewport({ scale: 1.5 });
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      viewer.appendChild(canvas);
+
+      page.render({
+        canvasContext: ctx,
+        viewport: viewport
+      });
+    });
+  }
+});
+</script>
+
+</body>
+</html>

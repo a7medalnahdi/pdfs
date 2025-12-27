@@ -5,15 +5,10 @@
 <title>الملفات</title>
 
 <style>
-* {
-  box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 body {
-  margin: 0;
-  padding: 30px;
+  font-family: Arial, Helvetica, sans-serif;
   background: #f6f6f6;
+  padding: 40px;
 }
 
 h1 {
@@ -22,7 +17,7 @@ h1 {
 }
 
 .files {
-  max-width: 900px;
+  max-width: 800px;
   margin: auto;
 }
 
@@ -36,31 +31,12 @@ h1 {
   align-items: center;
 }
 
-.file button {
+.file a {
   background: #000;
   color: #fff;
   padding: 7px 16px;
   border-radius: 6px;
-  border: none;
-  cursor: pointer;
-}
-
-.file button:hover {
-  opacity: .85;
-}
-
-/* عارض PDF */
-#viewer {
-  margin-top: 30px;
-  background: #fff;
-  padding: 15px;
-  border-radius: 10px;
-  display: none;
-}
-
-canvas {
-  width: 100%;
-  margin-bottom: 20px;
+  text-decoration: none;
 }
 </style>
 </head>
@@ -71,11 +47,6 @@ canvas {
 
 <div class="files" id="files">جاري التحميل…</div>
 
-<div id="viewer"></div>
-
-<!-- PDF.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
 <script>
 const owner  = "a7medalnahdi";
 const repo   = "pdfs";
@@ -85,51 +56,24 @@ const folder = "files";
 const apiURL = `https://api.github.com/repos/${owner}/${repo}/contents/${folder}`;
 
 fetch(apiURL)
-  .then(r => r.json())
+  .then(res => res.json())
   .then(files => {
-    const list = document.getElementById("files");
-    list.innerHTML = "";
+    const container = document.getElementById("files");
+    container.innerHTML = "";
 
     files.forEach(file => {
       if (file.name.toLowerCase().endsWith(".pdf")) {
-        const pdfURL =
-          `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${folder}/${encodeURIComponent(file.name)}`;
+        const link = `viewer.html?file=${encodeURIComponent(file.name)}`;
 
-        list.innerHTML += `
+        container.innerHTML += `
           <div class="file">
             <span>📄 ${file.name}</span>
-            <button onclick="openPDF('${pdfURL}')">استعراض</button>
+            <a href="${link}">استعراض</a>
           </div>
         `;
       }
     });
   });
-
-function openPDF(url) {
-  const viewer = document.getElementById("viewer");
-  viewer.innerHTML = "";
-  viewer.style.display = "block";
-
-  pdfjsLib.getDocument(url).promise.then(pdf => {
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      pdf.getPage(pageNum).then(page => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-
-        const viewport = page.getViewport({ scale: 1.5 });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        viewer.appendChild(canvas);
-
-        page.render({
-          canvasContext: ctx,
-          viewport: viewport
-        });
-      });
-    }
-  });
-}
 </script>
 
 </body>
