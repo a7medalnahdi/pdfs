@@ -12,7 +12,7 @@
 
 body {
   margin: 0;
-  padding: 40px;
+  padding: 30px;
   background: #f6f6f6;
 }
 
@@ -27,37 +27,40 @@ h1 {
 }
 
 .file {
-  background: #ffffff;
+  background: #fff;
   padding: 16px 20px;
   margin-bottom: 12px;
   border-radius: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
-.file span {
-  font-size: 15px;
-}
-
-.file a {
-  background: #17a2b8;
+.file button {
+  background: #000;
   color: #fff;
-  padding: 7px 18px;
+  padding: 7px 16px;
   border-radius: 6px;
-  text-decoration: none;
-  font-size: 14px;
+  border: none;
+  cursor: pointer;
 }
 
-.file a:hover {
-  background: #117a8b;
+.file button:hover {
+  opacity: .85;
 }
 
-.loading,
-.error {
-  text-align: center;
-  color: #777;
+/* عارض PDF */
+#viewer {
+  margin-top: 30px;
+  background: #fff;
+  padding: 15px;
+  border-radius: 10px;
+  display: none;
+}
+
+canvas {
+  width: 100%;
+  margin-bottom: 20px;
 }
 </style>
 </head>
@@ -66,9 +69,12 @@ h1 {
 
 <h1>📁 الملفات</h1>
 
-<div class="files" id="files">
-  <div class="loading">جاري تحميل الملفات…</div>
-</div>
+<div class="files" id="files">جاري التحميل…</div>
+
+<div id="viewer"></div>
+
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script>
 const owner  = "a7medalnahdi";
@@ -79,45 +85,51 @@ const folder = "files";
 const apiURL = `https://api.github.com/repos/${owner}/${repo}/contents/${folder}`;
 
 fetch(apiURL)
-  .then(res => {
-    if (!res.ok) throw new Error("API Error");
-    return res.json();
-  })
+  .then(r => r.json())
   .then(files => {
-    const container = document.getElementById("files");
-    container.innerHTML = "";
-
-    let hasPDF = false;
+    const list = document.getElementById("files");
+    list.innerHTML = "";
 
     files.forEach(file => {
       if (file.name.toLowerCase().endsWith(".pdf")) {
-        hasPDF = true;
-
-        // رابط الملف الأصلي
-        const rawURL =
+        const pdfURL =
           `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${folder}/${encodeURIComponent(file.name)}`;
 
-        // رابط الاستعراض (Google Viewer)
-        const viewURL =
-          `https://docs.google.com/gview?url=${encodeURIComponent(rawURL)}&embedded=true`;
-
-        container.innerHTML += `
+        list.innerHTML += `
           <div class="file">
             <span>📄 ${file.name}</span>
-            <a href="${viewURL}" target="_blank">استعراض</a>
+            <button onclick="openPDF('${pdfURL}')">استعراض</button>
           </div>
         `;
       }
     });
-
-    if (!hasPDF) {
-      container.innerHTML = `<div class="error">لا توجد ملفات PDF</div>`;
-    }
-  })
-  .catch(() => {
-    document.getElementById("files").innerHTML =
-      `<div class="error">❌ تأكد من تفعيل GitHub Pages</div>`;
   });
+
+function openPDF(url) {
+  const viewer = document.getElementById("viewer");
+  viewer.innerHTML = "";
+  viewer.style.display = "block";
+
+  pdfjsLib.getDocument(url).promise.then(pdf => {
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      pdf.getPage(pageNum).then(page => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        const viewport = page.getViewport({ scale: 1.5 });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        viewer.appendChild(canvas);
+
+        page.render({
+          canvasContext: ctx,
+          viewport: viewport
+        });
+      });
+    }
+  });
+}
 </script>
 
 </body>
