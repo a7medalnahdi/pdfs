@@ -22,7 +22,7 @@ h1 {
 }
 
 .files {
-  max-width: 700px;
+  max-width: 800px;
   margin: auto;
 }
 
@@ -42,16 +42,16 @@ h1 {
 }
 
 .file a {
-  background: #007bff;
+  background: #28a745;
   color: #fff;
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 6px;
   text-decoration: none;
   font-size: 14px;
 }
 
 .file a:hover {
-  background: #0056b3;
+  background: #1e7e34;
 }
 
 .loading,
@@ -71,20 +71,17 @@ h1 {
 </div>
 
 <script>
-/* بيانات الريبو */
 const owner  = "a7medalnahdi";
 const repo   = "pdfs";
+const branch = "main";
 const folder = "files";
 
-/* رابط GitHub API */
 const apiURL = `https://api.github.com/repos/${owner}/${repo}/contents/${folder}`;
 
 fetch(apiURL)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error("GitHub API Error");
-    }
-    return response.json();
+  .then(res => {
+    if (!res.ok) throw new Error("API Error");
+    return res.json();
   })
   .then(files => {
     const container = document.getElementById("files");
@@ -95,18 +92,21 @@ fetch(apiURL)
     files.forEach(file => {
       if (file.name.toLowerCase().endsWith(".pdf")) {
         hasPDF = true;
+
+        // رابط الاستعراض (بدون تحميل)
+        const viewURL = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${folder}/${encodeURIComponent(file.name)}`;
+
         container.innerHTML += `
           <div class="file">
             <span>📄 ${file.name}</span>
-            <a href="${file.download_url}" target="_blank">فتح</a>
+            <a href="${viewURL}" target="_blank">استعراض</a>
           </div>
         `;
       }
     });
 
     if (!hasPDF) {
-      container.innerHTML =
-        `<div class="error">لا توجد ملفات PDF</div>`;
+      container.innerHTML = `<div class="error">لا توجد ملفات PDF</div>`;
     }
   })
   .catch(() => {
