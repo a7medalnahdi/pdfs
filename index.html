@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>مستودع الملفات</title>
+<style>
+body { font-family: Arial; background:#f6f6f6; padding:30px }
+h1 { text-align:center }
+.files { max-width:700px; margin:auto }
+.file {
+  background:#fff;
+  padding:15px;
+  margin-bottom:10px;
+  border-radius:8px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+a { text-decoration:none; color:#007bff }
+</style>
+</head>
+<body>
+
+<h1>📂 الملفات</h1>
+<div class="files" id="files">جاري التحميل...</div>
+
+<script>
+const owner = "USERNAME";      // اسم حسابك
+const repo  = "REPO_NAME";     // اسم الريبو
+const folder = "files";        // مجلد الملفات
+
+fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${folder}`)
+.then(res => res.json())
+.then(data => {
+  const filesDiv = document.getElementById("files");
+  filesDiv.innerHTML = "";
+  data.forEach(file => {
+    if (file.name.endsWith(".pdf")) {
+      filesDiv.innerHTML += `
+        <div class="file">
+          <span>📄 ${file.name}</span>
+          <a href="${file.download_url}" target="_blank">فتح</a>
+        </div>
+      `;
+    }
+  });
+})
+.catch(() => {
+  document.getElementById("files").innerHTML = "فشل تحميل الملفات";
+});
+</script>
+
+</body>
+</html>
