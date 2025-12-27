@@ -5,10 +5,15 @@
 <title>الملفات</title>
 
 <style>
-body {
+* {
+  box-sizing: border-box;
   font-family: Arial, Helvetica, sans-serif;
-  background: #f6f6f6;
+}
+
+body {
+  margin: 0;
   padding: 40px;
+  background: #f6f6f6;
 }
 
 h1 {
@@ -17,26 +22,42 @@ h1 {
 }
 
 .files {
-  max-width: 800px;
+  max-width: 900px;
   margin: auto;
 }
 
 .file {
-  background: #fff;
+  background: #ffffff;
   padding: 16px 20px;
   margin-bottom: 12px;
   border-radius: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.file span {
+  font-size: 15px;
 }
 
 .file a {
-  background: #000;
+  background: #17a2b8;
   color: #fff;
-  padding: 7px 16px;
+  padding: 7px 18px;
   border-radius: 6px;
   text-decoration: none;
+  font-size: 14px;
+}
+
+.file a:hover {
+  background: #117a8b;
+}
+
+.loading,
+.error {
+  text-align: center;
+  color: #777;
 }
 </style>
 </head>
@@ -45,7 +66,9 @@ h1 {
 
 <h1>📁 الملفات</h1>
 
-<div class="files" id="files">جاري التحميل…</div>
+<div class="files" id="files">
+  <div class="loading">جاري تحميل الملفات…</div>
+</div>
 
 <script>
 const owner  = "a7medalnahdi";
@@ -56,23 +79,44 @@ const folder = "files";
 const apiURL = `https://api.github.com/repos/${owner}/${repo}/contents/${folder}`;
 
 fetch(apiURL)
-  .then(res => res.json())
+  .then(res => {
+    if (!res.ok) throw new Error("API Error");
+    return res.json();
+  })
   .then(files => {
     const container = document.getElementById("files");
     container.innerHTML = "";
 
+    let hasPDF = false;
+
     files.forEach(file => {
       if (file.name.toLowerCase().endsWith(".pdf")) {
-        const link = `viewer.html?file=${encodeURIComponent(file.name)}`;
+        hasPDF = true;
+
+        // رابط الملف الأصلي
+        const rawURL =
+          `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${folder}/${encodeURIComponent(file.name)}`;
+
+        // رابط الاستعراض (Google Viewer)
+        const viewURL =
+          `https://docs.google.com/gview?url=${encodeURIComponent(rawURL)}&embedded=true`;
 
         container.innerHTML += `
           <div class="file">
             <span>📄 ${file.name}</span>
-            <a href="${link}">استعراض</a>
+            <a href="${viewURL}" target="_blank">استعراض</a>
           </div>
         `;
       }
     });
+
+    if (!hasPDF) {
+      container.innerHTML = `<div class="error">لا توجد ملفات PDF</div>`;
+    }
+  })
+  .catch(() => {
+    document.getElementById("files").innerHTML =
+      `<div class="error">❌ تأكد من تفعيل GitHub Pages</div>`;
   });
 </script>
 
